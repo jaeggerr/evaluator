@@ -19,7 +19,6 @@ indirect enum ASTNode {
 // MARK: - Parser
 
 class Parser {
-
     // MARK: Lifecycle
 
     init(tokens: [Token]) {
@@ -66,7 +65,7 @@ class Parser {
 
     private func parseEquality() throws -> ASTNode {
         var node = try parseComparison()
-        while let token = peek(), case .operator(let op) = token, op == .equal || op == .notEqual {
+        while let token = peek(), case let .operator(op) = token, op == .equal || op == .notEqual {
             try consume()
             let right = try parseComparison()
             node = .binaryOp(left: node, op: op, right: right)
@@ -77,8 +76,9 @@ class Parser {
     private func parseComparison() throws -> ASTNode {
         var node = try parseBitwiseOr()
         while
-            let token = peek(), case .operator(let op) = token,
-            [.greaterThan, .greaterThanOrEqual, .lessThan, .lessThanOrEqual].contains(op) {
+            let token = peek(), case let .operator(op) = token,
+            [.greaterThan, .greaterThanOrEqual, .lessThan, .lessThanOrEqual].contains(op)
+        {
             try consume()
             let right = try parseBitwiseOr()
             node = .binaryOp(left: node, op: op, right: right)
@@ -108,7 +108,7 @@ class Parser {
 
     private func parseAdditive() throws -> ASTNode {
         var node = try parseMultiplicative()
-        while let token = peek(), case .operator(let op) = token, op == .plus || op == .minus {
+        while let token = peek(), case let .operator(op) = token, op == .plus || op == .minus {
             try consume()
             let right = try parseMultiplicative()
             node = .binaryOp(left: node, op: op, right: right)
@@ -118,7 +118,7 @@ class Parser {
 
     private func parseMultiplicative() throws -> ASTNode {
         var node = try parsePrimary()
-        while let token = peek(), case .operator(let op) = token, op == .multiply || op == .divide || op == .modulo {
+        while let token = peek(), case let .operator(op) = token, op == .multiply || op == .divide || op == .modulo {
             try consume()
             let right = try parsePrimary()
             node = .binaryOp(left: node, op: op, right: right)
@@ -132,13 +132,13 @@ class Parser {
         case .operator(.not):
             let operand = try parsePrimary()
             return .unaryOp(op: .not, operand: operand)
-        case .number(let value):
+        case let .number(value):
             return .literal(value)
-        case .string(let value):
+        case let .string(value):
             return .literal(value)
-        case .boolean(let value):
+        case let .boolean(value):
             return .literal(value)
-        case .variable(let name):
+        case let .variable(name):
             if peek() == .leftBracket {
                 try consume()
                 let index = try parseExpression()
@@ -148,7 +148,7 @@ class Parser {
                 return .arrayAccess(variable: name, index: index)
             }
             return .variable(name)
-        case .identifier(let name):
+        case let .identifier(name):
             if peek() == .leftParen {
                 try consume()
                 var args = [ASTNode]()

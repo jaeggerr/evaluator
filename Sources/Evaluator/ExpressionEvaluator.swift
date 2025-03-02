@@ -62,8 +62,7 @@ public enum ComparisonOperator {
 
 // MARK: - ExpressionEvaluator
 
-public struct ExpressionEvaluator {
-
+public enum ExpressionEvaluator {
     // MARK: Public
 
     public typealias VariableResolver = (String) throws -> Any
@@ -76,8 +75,10 @@ public struct ExpressionEvaluator {
         functions: @escaping FunctionResolver = { name, _ in throw ExpressionError.functionNotFound(name) },
         comparator: @escaping ComparatorResolver = { a, b, _ in
             throw ExpressionError.invalidOperation("Comparison impossible for type \(type(of: a)) and \(type(of: b))")
-        }) throws
-        -> T {
+        }
+    ) throws
+        -> T
+    {
         var tokenizer = Tokenizer(input: expression)
         let tokens = try tokenizer.tokenize()
         guard !tokens.isEmpty else {
@@ -118,7 +119,7 @@ public struct ExpressionEvaluator {
         }
     }
 
-    public static func ensureArity(_ args: [Any], _ expectedArity: Int) throws(ExpressionError) {
+    public static func ensureArity(_ args: [Any], _ expectedArity: Int) throws (ExpressionError) {
         guard args.count == expectedArity else {
             throw .invalidArity(expectedArity)
         }
@@ -130,10 +131,12 @@ public struct ExpressionEvaluator {
         node: ASTNode,
         variables: VariableResolver,
         functions: FunctionResolver,
-        comparator: ComparatorResolver) throws
-        -> Any {
+        comparator: ComparatorResolver
+    ) throws
+        -> Any
+    {
         switch node {
-        case .unaryOp(let op, let operand):
+        case let .unaryOp(op, operand):
             let value = try evaluate(node: operand, variables: variables, functions: functions, comparator: comparator)
             switch op {
             case .not:
@@ -144,27 +147,28 @@ public struct ExpressionEvaluator {
             default:
                 throw ExpressionError.invalidOperation("Unsupported unary operator")
             }
-        case .binaryOp(let left, let op, let right):
+        case let .binaryOp(left, op, right):
             return try evaluateBinaryOp(
                 left: left,
                 op: op,
                 right: right,
                 variables: variables,
                 functions: functions,
-                comparator: comparator)
+                comparator: comparator
+            )
 
-        case .variable(let name):
+        case let .variable(name):
             return try variables(name)
 
-        case .functionCall(let name, let args):
+        case let .functionCall(name, args):
             let evaluatedArgs = try args
                 .map { try evaluate(node: $0, variables: variables, functions: functions, comparator: comparator) }
             return try functions(name, evaluatedArgs)
 
-        case .literal(let value):
+        case let .literal(value):
             return value
 
-        case .arrayAccess(let variable, let indexNode):
+        case let .arrayAccess(variable, indexNode):
             let array = try variables(variable)
             guard let array = array as? [Any] else {
                 throw ExpressionError.typeMismatch("\(variable) is not an array")
@@ -189,8 +193,10 @@ public struct ExpressionEvaluator {
         right: ASTNode,
         variables: VariableResolver,
         functions: FunctionResolver,
-        comparator: ComparatorResolver) throws
-        -> Any {
+        comparator: ComparatorResolver
+    ) throws
+        -> Any
+    {
         switch op {
         case .and:
             let lhs = try evaluate(node: left, variables: variables, functions: functions, comparator: comparator)
@@ -301,9 +307,11 @@ public struct ExpressionEvaluator {
     private static func compare(
         _ a: Any,
         _ b: Any,
-        _ `operator`: ComparisonOperator,
-        comparator: ComparatorResolver) throws
-        -> Bool {
+        _ operator: ComparisonOperator,
+        comparator: ComparatorResolver
+    ) throws
+        -> Bool
+    {
         if let aNum = try? convertToDouble(a), let bNum = try? convertToDouble(b) {
             return `operator`.compare(lhs: aNum, rhs: bNum)
         }

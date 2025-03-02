@@ -24,7 +24,6 @@ enum Token: Equatable {
 // MARK: - Tokenizer
 
 struct Tokenizer {
-
     // MARK: Lifecycle
 
     init(input: String) {
@@ -36,7 +35,6 @@ struct Tokenizer {
 
     let input: String
     var index: String.Index
-
 
     mutating func tokenize() throws -> [Token] {
         var tokens = [Token]()
@@ -53,7 +51,7 @@ struct Tokenizer {
                 try tokens.append(parseVariable())
             case "'":
                 try tokens.append(.string(parseString()))
-            case "0"..."9":
+            case "0" ... "9":
                 try tokens.append(.number(parseNumber()))
             case "(":
                 tokens.append(.leftParen)
@@ -117,7 +115,7 @@ struct Tokenizer {
             }
         }
 
-        let variableName = String(input[startIndex..<index])
+        let variableName = String(input[startIndex ..< index])
         return .variable(variableName)
     }
 
@@ -185,7 +183,7 @@ struct Tokenizer {
         while index < input.endIndex, input[index].isAlphanumeric {
             advance()
         }
-        return String(input[start..<index])
+        return String(input[start ..< index])
     }
 
     private mutating func advance(by n: Int = 1) {
@@ -195,17 +193,17 @@ struct Tokenizer {
 
 // MARK: - Extensions
 
-extension String {
-    fileprivate func hasPrefix(_ prefix: String, startingAt index: String.Index) -> Bool {
+private extension String {
+    func hasPrefix(_ prefix: String, startingAt index: String.Index) -> Bool {
         guard let endIndex = self.index(index, offsetBy: prefix.count, limitedBy: endIndex) else {
             return false
         }
-        return self[index..<endIndex] == prefix
+        return self[index ..< endIndex] == prefix
     }
 }
 
-extension Character {
-    fileprivate var isAlphanumeric: Bool {
+private extension Character {
+    var isAlphanumeric: Bool {
         isLetter || isNumber
     }
 }
