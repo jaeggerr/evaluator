@@ -10,7 +10,6 @@ import Foundation
 import XCTest
 
 class ExpressionEvaluatorTests: XCTestCase {
-
     // MARK: - Helpers
 
     func testArithmeticOperations() throws {
@@ -61,13 +60,15 @@ class ExpressionEvaluatorTests: XCTestCase {
         let evaluator: Double = try ExpressionEvaluator.evaluate(expression: "sum(1, 2, 3)", functions: { name, args in
             if
                 name ==
-                "sum" {
+                "sum"
+            {
                 return try args
                     .reduce(
-                        0,
-                        {
-                            try ($0 as! EvaluatorDoubleConvertible).convertToDouble() + ($1 as! EvaluatorDoubleConvertible)
-                                .convertToDouble() })
+                        0)
+                {
+                    try ($0 as! EvaluatorDoubleConvertible).convertToDouble() + ($1 as! EvaluatorDoubleConvertible)
+                        .convertToDouble()
+                }
             }
             throw ExpressionError.functionNotFound(name)
         })
@@ -103,14 +104,16 @@ class ExpressionEvaluatorTests: XCTestCase {
                 if $0 == "#b" { return true }
                 if $0 == "#a" { return false }
                 throw ExpressionError.variableNotFound($0)
-            }))
+            }
+        ))
         XCTAssertTrue(try ExpressionEvaluator.evaluate(
             expression: "#a && #b",
             variables: {
                 if $0 == "#b" { return true }
                 if $0 == "#a" { return true }
                 throw ExpressionError.variableNotFound($0)
-            }))
+            }
+        ))
     }
 
     func testShortCircuitOr() throws {
@@ -120,14 +123,16 @@ class ExpressionEvaluatorTests: XCTestCase {
                 if $0 == "#b" { return true }
                 if $0 == "#a" { return false }
                 throw ExpressionError.variableNotFound($0)
-            }))
+            }
+        ))
         XCTAssertFalse(try ExpressionEvaluator.evaluate(
             expression: "#a || #b",
             variables: {
                 if $0 == "#b" { return false }
                 if $0 == "#a" { return false }
                 throw ExpressionError.variableNotFound($0)
-            }))
+            }
+        ))
     }
 
     // MARK: - Comparison Operators
@@ -166,7 +171,6 @@ class ExpressionEvaluatorTests: XCTestCase {
 
         XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "sum(1, 2, 3)", functions: functions), 6)
         XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "concat('a', 5, true)", functions: functions), "a5.0true")
-
     }
 
     // MARK: - Edge Cases
@@ -194,9 +198,10 @@ class ExpressionEvaluatorTests: XCTestCase {
                 expression: "#test",
                 variables: { _ in
                     throw NSError(domain: "CustomError", code: 42)
-                }) as Int) { error in
-            XCTAssertNotNil(error)
-        }
+                }
+            ) as Int) { error in
+                XCTAssertNotNil(error)
+            }
     }
 
     // MARK: Complex operations
@@ -314,7 +319,7 @@ class ExpressionEvaluatorTests: XCTestCase {
             switch name {
             case "dateTime":
                 try ExpressionEvaluator.ensureArity(args, 1)
-                let interval: TimeInterval = TimeInterval(try (args[0] as! EvaluatorDoubleConvertible).convertToDouble())
+                let interval: TimeInterval = .init(try (args[0] as! EvaluatorDoubleConvertible).convertToDouble())
                 let formatter = DateComponentsFormatter()
                 formatter.calendar = Calendar(identifier: .gregorian)
                 formatter.calendar!.locale = Locale(identifier: "en_US")
@@ -324,5 +329,94 @@ class ExpressionEvaluatorTests: XCTestCase {
             default: throw ExpressionError.functionNotFound(name)
             }
         }), "12346s ~ 3h 25m 46s")
+    }
+
+    // MARK: - Nested Expressions
+
+    func testNestedExpressions() throws {
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "((2 + 3) * (4 - 1)) / 2"), 7.5)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "(5 + (3 * 2) - 4) / 2"), 3.5)
+    }
+
+    // MARK: - Edge Case Booleans
+
+    func testBooleanEdgeCases() throws {
+        XCTAssertTrue(try ExpressionEvaluator.evaluate(expression: "!false"))
+        XCTAssertFalse(try ExpressionEvaluator.evaluate(expression: "!true"))
+        XCTAssertTrue(try ExpressionEvaluator.evaluate(expression: "!!true"))
+        XCTAssertFalse(try ExpressionEvaluator.evaluate(expression: "!!false"))
+    }
+
+    // MARK: - Function Evaluation with Complex Types
+
+    func testFunctionWithCustomType() throws {
+        struct IntWrapper: EvaluatorIntConvertible {
+            let value: Int
+            func convertToInt() throws -> Int { value }
+        }
+
+        let functions: ExpressionEvaluator.FunctionResolver = { name, args in
+            switch name {
+            case "doubleValue":
+                try ExpressionEvaluator.ensureArity(args, 1)
+                if let wrapped = args[0] as? IntWrapper {
+                    return wrapped.value * 2
+                }
+                throw ExpressionError.invalidOperation("Invalid argument type")
+            default:
+                throw ExpressionError.functionNotFound(name)
+            }
+        }
+
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "doubleValue($val)", variables: {
+            switch $0 {
+            case "$val": return IntWrapper(value: 10)
+            default: throw ExpressionError.variableNotFound($0)
+            }
+        }, functions: functions), 20)
+    }
+
+    // MARK: - Complex Comparisons
+
+    func testComplexComparisons() throws {
+        XCTAssertTrue(try ExpressionEvaluator.evaluate(expression: "(5 > 3) && (10 < 20)"))
+        XCTAssertFalse(try ExpressionEvaluator.evaluate(expression: "(5 == 5) && (3 > 4)"))
+        XCTAssertTrue(try ExpressionEvaluator.evaluate(expression: "('abc' != 'def') && (10 <= 10)"))
+    }
+
+    // MARK: - Mixed Type Operations
+
+    func testMixedTypeOperations() throws {
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "'Number: ' + 42"), "Number: 42")
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "5.5 + 2"), 7.5)
+        XCTAssertThrowsError(try ExpressionEvaluator.evaluate(expression: "true + 5") as Int)
+    }
+
+    // MARK: - Short-Circuit Edge Cases
+
+    func testShortCircuitEdgeCases() throws {
+        XCTAssertFalse(try ExpressionEvaluator.evaluate(expression: "false && $undefinedVariable"))
+        XCTAssertTrue(try ExpressionEvaluator.evaluate(expression: "true || $undefinedVariable"))
+    }
+
+    // MARK: - Array Access Tests
+
+    func testArrayAccess() throws {
+        let variables: ExpressionEvaluator.VariableResolver = {
+            if $0 == "$array" { return [10, 20, 30] }
+            throw ExpressionError.variableNotFound($0)
+        }
+
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "$array[0]", variables: variables), 10)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "$array[1]", variables: variables), 20)
+        XCTAssertThrowsError(try ExpressionEvaluator.evaluate(expression: "$array[5]", variables: variables) as Int)
+    }
+
+    // MARK: - Invalid Expressions
+
+    func testInvalidExpressions() throws {
+        XCTAssertThrowsError(try ExpressionEvaluator.evaluate(expression: "()") as Int)
+        XCTAssertThrowsError(try ExpressionEvaluator.evaluate(expression: "5 + * 3") as Int)
+        XCTAssertThrowsError(try ExpressionEvaluator.evaluate(expression: "'hello") as String)
     }
 }
