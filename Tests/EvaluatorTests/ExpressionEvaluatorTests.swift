@@ -318,8 +318,7 @@ class ExpressionEvaluatorTests: XCTestCase {
         }, functions: { name, args in
             switch name {
             case "dateTime":
-                try ExpressionEvaluator.ensureArity(args, 1)
-                let interval: TimeInterval = .init(try (args[0] as! EvaluatorDoubleConvertible).convertToDouble())
+                let interval: TimeInterval = try ArgumentsHelper(args).get(0)
                 let formatter = DateComponentsFormatter()
                 formatter.calendar = Calendar(identifier: .gregorian)
                 formatter.calendar!.locale = Locale(identifier: "en_US")
@@ -358,11 +357,7 @@ class ExpressionEvaluatorTests: XCTestCase {
         let functions: ExpressionEvaluator.FunctionResolver = { name, args in
             switch name {
             case "doubleValue":
-                try ExpressionEvaluator.ensureArity(args, 1)
-                if let wrapped = args[0] as? IntWrapper {
-                    return wrapped.value * 2
-                }
-                throw ExpressionError.invalidOperation("Invalid argument type")
+                try ArgumentsHelper(args).get(0, type: IntWrapper.self).value * 2
             default:
                 throw ExpressionError.functionNotFound(name)
             }

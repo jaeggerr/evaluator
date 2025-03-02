@@ -16,7 +16,7 @@ public enum ExpressionError: Error, Equatable {
     case invalidOperation(String)
     case functionNotFound(String)
     case missingOperand(String)
-    case invalidArity(_ requiredArguments: Int)
+    case invalidArity(Arity)
 }
 
 // MARK: - Operator
@@ -116,12 +116,6 @@ public enum ExpressionEvaluator {
             return try convertible.convertToBool() as! T
         } else {
             throw ExpressionError.typeMismatch("Expected return type \(T.self) instead of \(type(of: result))")
-        }
-    }
-
-    public static func ensureArity(_ args: [Any], _ expectedArity: Int) throws (ExpressionError) {
-        guard args.count == expectedArity else {
-            throw .invalidArity(expectedArity)
         }
     }
 
