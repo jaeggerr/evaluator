@@ -161,6 +161,30 @@ let result = try ExpressionEvaluator.evaluate(expression: "$obj1 > $obj2", varia
 // result == true
 ```
 
+## Function Argument Helper
+A helper struct `ArgumentsHelper` has been added to simplify function argument parsing. This helps enforce correct argument types and arities when defining custom functions.
+
+### Usage
+```swift
+let functions: ExpressionEvaluator.FunctionResolver = {
+    switch $0 {
+    case "multiply":
+        let argsHelper = ArgumentsHelper($1)
+        let a: Double = try argsHelper.get(0)
+        let b: Double = try argsHelper.get(1)
+        return a * b
+    default: throw ExpressionError.functionNotFound($0)
+    }
+}
+let result: Double = try ExpressionEvaluator.evaluate(expression: "multiply(3, 4)", functions: functions)
+print(result) // Output: 12.0
+```
+
+### Features of `ArgumentsHelper`
+- Ensures correct number of arguments with `ensureArity()`
+- Retrieves arguments safely with type checks
+- Supports `Double`, `Int`, `String`, `Bool`, and generic types
+
 ## License
 This library is licensed under a standard open-source license that allows modifications and closed-source usage but does not permit reselling the library.
 
