@@ -21,7 +21,7 @@ Evaluator is cross-platform and has **no dependencies**, making it lightweight a
 Evaluator is available through Swift Package Manager (SPM). To install it, add the following to your `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/jaeggerr/evaluator.git", from: "1.0.0")
+.package(url: "https://github.com/jaeggerr/evaluator.git", from: "1.1.1")
 ```
 
 Or, if using Xcode, go to **File > Swift Packages > Add Package Dependency** and enter the repository URL.
