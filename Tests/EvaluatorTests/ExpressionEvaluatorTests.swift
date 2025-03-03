@@ -426,8 +426,109 @@ class ExpressionEvaluatorTests: XCTestCase {
                 "\(value)"
             }
         }
-        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "#my_var", variables: { name in
-            return IntWrapper(value: 123)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "#my_var", variables: { _ in
+            IntWrapper(value: 123)
         }), "123")
+    }
+
+    // MARK: - Math Functions
+
+    func testSqrtFunction() throws {
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "sqrt(4)"), 2.0)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "sqrt(9)"), 3.0)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "sqrt(2)"), sqrt(2.0))
+        XCTAssertTrue((try ExpressionEvaluator.evaluate(expression: "sqrt(-1)") as Double).isNaN)
+    }
+
+    func testFloorFunction() throws {
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "floor(4.8)"), 4.0)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "floor(-3.2)"), -4.0)
+    }
+
+    func testCeilFunction() throws {
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "ceil(4.2)"), 5.0)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "ceil(-3.8)"), -3.0)
+    }
+
+    func testRoundFunction() throws {
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "round(4.4)"), 4.0)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "round(4.6)"), 5.0)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "round(-3.5)"), -4.0)
+    }
+
+    func testCosFunction() throws {
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "cos(0)"), 1.0)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "cos(3.14159265358979)"), cos(Double.pi), accuracy: 1e-10)
+    }
+
+    func testAcosFunction() throws {
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "acos(1)"), 0.0)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "acos(0)"), acos(0.0), accuracy: 1e-10)
+        XCTAssertTrue((try ExpressionEvaluator.evaluate(expression: "acos(2)") as Double).isNaN)
+    }
+
+    func testSinFunction() throws {
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "sin(0)"), 0.0)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "sin(3.14159265358979/2)"), sin(Double.pi / 2), accuracy: 1e-10)
+    }
+
+    func testAsinFunction() throws {
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "asin(0)"), 0.0)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "asin(1)"), asin(1.0), accuracy: 1e-10)
+        XCTAssertTrue((try ExpressionEvaluator.evaluate(expression: "asin(2)") as Double).isNaN)
+    }
+
+    func testTanFunction() throws {
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "tan(0)"), 0.0)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "tan(3.14159265358979/4)"), tan(Double.pi / 4), accuracy: 1e-10)
+    }
+
+    func testAtanFunction() throws {
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "atan(0)"), 0.0)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "atan(1)"), atan(1.0), accuracy: 1e-10)
+    }
+
+    func testAbsFunction() throws {
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "abs(-5)"), 5.0)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "abs(5)"), 5.0)
+    }
+
+    func testLogFunction() throws {
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "log(1)"), 0.0)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "log(2.718281828459)"), log(2.718281828459), accuracy: 1e-10)
+        XCTAssertTrue((try ExpressionEvaluator.evaluate(expression: "log(-1)") as Double).isNaN)
+    }
+
+    func testPowFunction() throws {
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "pow(2, 3)"), 8.0)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "pow(4, 0.5)"), 2.0)
+    }
+
+    func testAtan2Function() throws {
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "atan2(0, 1)"), atan2(0.0, 1.0), accuracy: 1e-10)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "atan2(1, 1)"), atan2(1.0, 1.0), accuracy: 1e-10)
+    }
+
+    func testMaxFunction() throws {
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "max(5, 10, 3, -1, 4)"), 10.0)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "max(7, 7)"), 7.0)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "max(-1, -10)"), -1.0)
+    }
+
+    func testMinFunction() throws {
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "min(5, 10, 3, -1, 4)"), -1)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "min(7, 7)"), 7.0)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "min(-1, -10)"), -10.0)
+    }
+
+    func testOverrideLibraryFunction() throws {
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "sqrt(4)", functions: { name, _ in
+            switch name {
+            case "sqrt":
+                return "Overridden sqrt function!"
+            default:
+                throw ExpressionError.functionNotFound(name)
+            }
+        }), "Overridden sqrt function!")
     }
 }

@@ -159,7 +159,16 @@ public enum ExpressionEvaluator {
         case let .functionCall(name, args):
             let evaluatedArgs = try args
                 .map { try evaluate(node: $0, variables: variables, functions: functions, comparator: comparator) }
-            return try functions(name, evaluatedArgs)
+            do {
+                // Give priority to custom fonction and allow overwrite default functions
+                return try functions(name, evaluatedArgs)
+            } catch let error as ExpressionError {
+                // Fallback library functions
+                if case .functionNotFound = error {
+                    return try libraryFunctions(name, evaluatedArgs)
+                }
+                throw error
+            }
 
         case let .literal(value):
             return value

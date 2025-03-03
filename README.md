@@ -21,7 +21,7 @@ Evaluator is cross-platform and has **no dependencies**, making it lightweight a
 Evaluator is available through Swift Package Manager (SPM). To install it, add the following to your `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/jaeggerr/evaluator.git", from: "1.1.1")
+.package(url: "https://github.com/jaeggerr/evaluator.git", from: "1.1.2")
 ```
 
 Or, if using Xcode, go to **File > Swift Packages > Add Package Dependency** and enter the repository URL.
@@ -73,6 +73,45 @@ let result = try ExpressionEvaluator.evaluate(expression: "#values[2] + 1", vari
     }
 })
 // result == 31
+```
+
+## Supported Functions
+Evaluator provides a set of built-in mathematical functions, which can be used in expressions:
+
+| Function  | Description | Example |
+|-----------|------------|---------|
+| `sqrt(x)`  | Square root | `sqrt(4) = 2.0` |
+| `floor(x)` | Rounds down to the nearest integer | `floor(3.7) = 3.0` |
+| `ceil(x)`  | Rounds up to the nearest integer | `ceil(3.2) = 4.0` |
+| `round(x)` | Rounds to the nearest integer | `round(3.5) = 4.0` |
+| `cos(x)`   | Cosine (radians) | `cos(0) = 1.0` |
+| `acos(x)`  | Arc cosine | `acos(1) = 0.0` |
+| `sin(x)`   | Sine (radians) | `sin(0) = 0.0` |
+| `asin(x)`  | Arc sine | `asin(0) = 0.0` |
+| `tan(x)`   | Tangent (radians) | `tan(0) = 0.0` |
+| `atan(x)`  | Arc tangent | `atan(1) = π/4` |
+| `log(x)`   | Natural logarithm | `log(e) = 1.0` |
+| `abs(x)`   | Absolute value | `abs(-5) = 5.0` |
+| `pow(x, y)` | Power function | `pow(2, 3) = 8.0` |
+| `atan2(y, x)` | Two-argument arc tangent | `atan2(1, 1) = π/4` |
+| `max(a, b, ...)` | Maximum value | `max(3, 5, 2) = 5.0` |
+| `min(a, b, ...)` | Minimum value | `min(3, 5, 2) = 2.0` |
+
+### Overriding Built-in Functions
+You can override any built-in function by defining a custom function with the same name. Custom functions take precedence over built-in functions.
+
+```swift
+let customFunctions: ExpressionEvaluator.FunctionResolver = { name, args in
+    switch name {
+    case "sqrt":
+        return "Overridden sqrt function!"
+    default:
+        throw ExpressionError.functionNotFound(name)
+    }
+}
+
+let result = try ExpressionEvaluator.evaluate(expression: "sqrt(4)", functions: customFunctions)
+print(result) // "Overridden sqrt function!"
 ```
 
 ## Custom Functions
