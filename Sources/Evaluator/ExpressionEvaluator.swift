@@ -114,6 +114,8 @@ public enum ExpressionEvaluator {
             return Float(try convertible.convertToDouble()) as! T
         } else if T.self == Bool.self, let convertible = result as? EvaluatorBoolConvertible {
             return try convertible.convertToBool() as! T
+        } else if T.self == String.self, let convertible = result as? EvaluatorStringConvertible {
+            return try convertible.convertToString() as! T
         } else {
             throw ExpressionError.typeMismatch("Expected return type \(T.self) instead of \(type(of: result))")
         }

@@ -414,4 +414,20 @@ class ExpressionEvaluatorTests: XCTestCase {
         XCTAssertThrowsError(try ExpressionEvaluator.evaluate(expression: "5 + * 3") as Int)
         XCTAssertThrowsError(try ExpressionEvaluator.evaluate(expression: "'hello") as String)
     }
+
+    // MARK: - Strings evaluations
+
+    func testString() throws {
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "'hello'"), "hello")
+
+        struct IntWrapper: EvaluatorStringConvertible {
+            var value: Int
+            func convertToString() throws -> String {
+                "\(value)"
+            }
+        }
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "#my_var", variables: { name in
+            return IntWrapper(value: 123)
+        }), "123")
+    }
 }
