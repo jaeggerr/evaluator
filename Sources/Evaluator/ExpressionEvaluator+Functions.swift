@@ -8,10 +8,25 @@
 import Foundation
 
 public extension ExpressionEvaluator {
-    static var libraryFunctions: FunctionResolver {
+    static func libraryFunctions(variables: @escaping VariableResolver) -> FunctionResolver {
         return { name, arguments in
             let args = ArgumentsHelper(arguments)
+
             switch name {
+            // MARK: - Meta
+
+            case "exists":
+                try args.ensureArity(.exactly(1))
+                let varName = try args.get(0, type: String.self)
+                do {
+                    _ = try variables(varName)
+                    return true
+                } catch ExpressionError.variableNotFound {
+                    return false
+                }
+
+            // MARK: - Math
+
             case "sqrt":
                 return sqrt(try args.get(0) as Double)
             case "floor":
@@ -46,6 +61,7 @@ public extension ExpressionEvaluator {
             case "min":
                 try args.ensureArity(.atLeast(2))
                 return try (0 ..< arguments.count).map { try args.get($0) as Double }.min()!
+
             default:
                 throw ExpressionError.functionNotFound(name)
             }

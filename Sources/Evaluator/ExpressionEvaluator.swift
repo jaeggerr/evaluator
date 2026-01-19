@@ -125,7 +125,7 @@ public enum ExpressionEvaluator {
 
     private static func evaluate(
         node: ASTNode,
-        variables: VariableResolver,
+        variables: @escaping VariableResolver,
         functions: FunctionResolver,
         comparator: ComparatorResolver
     ) throws
@@ -165,7 +165,7 @@ public enum ExpressionEvaluator {
             } catch let error as ExpressionError {
                 // Fallback library functions
                 if case .functionNotFound = error {
-                    return try libraryFunctions(name, evaluatedArgs)
+                    return try libraryFunctions(variables: variables)(name, evaluatedArgs)
                 }
                 throw error
             }
@@ -196,7 +196,7 @@ public enum ExpressionEvaluator {
         left: ASTNode,
         op: Operator,
         right: ASTNode,
-        variables: VariableResolver,
+        variables: @escaping VariableResolver,
         functions: FunctionResolver,
         comparator: ComparatorResolver
     ) throws

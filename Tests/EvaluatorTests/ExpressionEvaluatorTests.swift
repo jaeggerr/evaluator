@@ -531,4 +531,25 @@ class ExpressionEvaluatorTests: XCTestCase {
             }
         }), "Overridden sqrt function!")
     }
+
+    func testExists() throws {
+        XCTAssertFalse(try ExpressionEvaluator.evaluate(
+            expression: "exists('$foo')"))
+        XCTAssertTrue(try ExpressionEvaluator.evaluate(
+            expression: "exists('$foo')", variables: {
+                if $0 == "$foo" {
+                    return "foo"
+                }
+                throw ExpressionError.variableNotFound($0)
+            }
+        ))
+        XCTAssertTrue(try ExpressionEvaluator.evaluate(
+            expression: "exists('$foo')", variables: {
+                if $0 == "$foo" {
+                    return NSNull()
+                }
+                throw ExpressionError.variableNotFound($0)
+            }
+        ))
+    }
 }

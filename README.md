@@ -96,6 +96,7 @@ Evaluator provides a set of built-in mathematical functions, which can be used i
 | `atan2(y, x)` | Two-argument arc tangent | `atan2(1, 1) = π/4` |
 | `max(a, b, ...)` | Maximum value | `max(3, 5, 2) = 5.0` |
 | `min(a, b, ...)` | Minimum value | `min(3, 5, 2) = 2.0` |
+| `exists(name)` | Returns `true` if the variable is defined | `exists("foo") = true` |
 
 ### Overriding Built-in Functions
 You can override any built-in function by defining a custom function with the same name. Custom functions take precedence over built-in functions.
