@@ -89,7 +89,7 @@ struct Tokenizer {
             default:
                 if let op = try parseOperator() {
                     tokens.append(.operator(op))
-                } else if c.isLetter {
+                } else if c.isLetter || c == "_" {
                     tokens.append(.identifier(parseIdentifier()))
                 } else {
                     throw ExpressionError.parseError("Unexpected character: \(c)")
@@ -199,7 +199,8 @@ struct Tokenizer {
 
     private mutating func parseIdentifier() -> String {
         let start = index
-        while index < input.endIndex, input[index].isAlphanumeric {
+        // Same character set as variable names, so a function such as all_passed() is valid.
+        while index < input.endIndex, input[index].isAlphanumeric || input[index] == "_" {
             advance()
         }
         return String(input[start ..< index])

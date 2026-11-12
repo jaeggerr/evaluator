@@ -612,4 +612,16 @@ class ExpressionEvaluatorTests: XCTestCase {
         XCTAssertThrowsError(try ExpressionEvaluator.evaluate(expression: "#a..b", variables: variables) as Double)
         XCTAssertThrowsError(try ExpressionEvaluator.evaluate(expression: "#.a", variables: variables) as Double)
     }
+
+    func testUnderscoreInFunctionName() throws {
+        let functions: (String, [Any]) throws -> Any = { name, _ in
+            switch name {
+            case "all_passed": return true
+            case "_private": return 3
+            default: throw ExpressionError.functionNotFound(name)
+            }
+        }
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "all_passed()", functions: functions), true)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "_private() + 1", functions: functions), 4)
+    }
 }
