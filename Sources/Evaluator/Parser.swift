@@ -31,7 +31,13 @@ class Parser {
         guard !tokens.isEmpty else {
             throw ExpressionError.parseError("Empty expression")
         }
-        return try parseExpression()
+        let node = try parseExpression()
+        // Every token must belong to the expression: leftovers used to be dropped silently,
+        // turning "5 3" into 5.
+        if let token = peek() {
+            throw ExpressionError.parseError("Unexpected token: \(token)")
+        }
+        return node
     }
 
     // MARK: Private

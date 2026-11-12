@@ -583,4 +583,25 @@ class ExpressionEvaluatorTests: XCTestCase {
             }
         ))
     }
+
+    func testSubtractionWithoutSpaces() throws {
+        let variables: (String) throws -> Any = { name in
+            if name == "#torque" { return 20 }
+            throw ExpressionError.variableNotFound(name)
+        }
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "5-3"), 2)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "(5)-3"), 2)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "#torque-10", variables: variables), 10)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "#torque-10 > 5", variables: variables), true)
+        // Negative literals where an operand is expected are unchanged.
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "5 >= -70"), true)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "5 - -3"), 8)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "min(-1, -10)"), -10)
+    }
+
+    func testLeftoverTokensThrow() throws {
+        XCTAssertThrowsError(try ExpressionEvaluator.evaluate(expression: "5 3") as Double)
+        XCTAssertThrowsError(try ExpressionEvaluator.evaluate(expression: "1 + 2)") as Double)
+        XCTAssertThrowsError(try ExpressionEvaluator.evaluate(expression: "true false") as Bool)
+    }
 }

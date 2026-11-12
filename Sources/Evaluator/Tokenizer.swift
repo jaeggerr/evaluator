@@ -21,6 +21,18 @@ enum Token: Equatable {
     case rightBracket
 }
 
+extension Token {
+    /// Whether this token can end an operand, so that a following '-' is a binary operator.
+    var endsOperand: Bool {
+        switch self {
+        case .number, .string, .boolean, .variable, .rightParen, .rightBracket:
+            return true
+        case .identifier, .operator, .leftParen, .comma, .leftBracket:
+            return false
+        }
+    }
+}
+
 // MARK: - Tokenizer
 
 struct Tokenizer {
@@ -68,7 +80,11 @@ struct Tokenizer {
             case "]":
                 tokens.append(.rightBracket)
                 advance()
-            case "-" where input.index(after: index) < input.endIndex && input[input.index(after: index)].isNumber:
+            // A '-' directly followed by a digit is a negative literal only where an operand is
+            // expected; after a value it is the subtraction operator ("5-3" is 5 minus 3).
+            case "-" where input.index(after: index) < input.endIndex
+                && input[input.index(after: index)].isNumber
+                && !(tokens.last?.endsOperand ?? false):
                 try tokens.append(.number(parseNumber()))
             default:
                 if let op = try parseOperator() {
