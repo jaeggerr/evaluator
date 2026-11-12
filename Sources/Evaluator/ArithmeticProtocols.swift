@@ -62,9 +62,14 @@ extension Double: EvaluatorDoubleConvertible, EvaluatorIntConvertible, Evaluator
     }
 
     public func convertToString() throws -> String {
-        let formatter = NumberFormatter()
-        formatter.minimumFractionDigits = 0
-        return formatter.string(for: self)!
+        // Render whole values without a decimal separator ("2" rather than "2.0"),
+        // and keep every significant digit otherwise. Deliberately not using
+        // NumberFormatter: its default numberStyle rounds to zero fraction digits
+        // and its output is locale dependent.
+        if truncatingRemainder(dividingBy: 1) == 0, abs(self) < 1e15 {
+            return String(Int(self))
+        }
+        return "\(self)"
     }
 }
 

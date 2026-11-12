@@ -431,6 +431,37 @@ class ExpressionEvaluatorTests: XCTestCase {
         }), "123")
     }
 
+    func testDoubleToStringConversion() throws {
+        // Direct conversion through the EvaluatorStringConvertible conformance.
+        XCTAssertEqual(try (2.5).convertToString(), "2.5")
+        XCTAssertEqual(try (2.0).convertToString(), "2")
+        XCTAssertEqual(try (0.1).convertToString(), "0.1")
+        XCTAssertEqual(try (-3.25).convertToString(), "-3.25")
+        XCTAssertEqual(try (1234.5678).convertToString(), "1234.5678")
+    }
+
+    func testStringDoubleConcatenation() throws {
+        let variables: ExpressionEvaluator.VariableResolver = {
+            switch $0 {
+            case "#half": return 2.5
+            case "#whole": return 2.0
+            case "#small": return 0.1
+            case "#negative": return -3.25
+            default: throw ExpressionError.variableNotFound($0)
+            }
+        }
+
+        // Decimals must survive string concatenation.
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "'x' + #half", variables: variables), "x2.5")
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "'x' + #small", variables: variables), "x0.1")
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "'x' + #negative", variables: variables), "x-3.25")
+        // A Double without decimals keeps its integer rendering.
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "'x' + #whole", variables: variables), "x2")
+        // Same thing with a literal and a computed value.
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "'x' + 2.5"), "x2.5")
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "'value: ' + (1 / 4)"), "value: 0.25")
+    }
+
     // MARK: - Math Functions
 
     func testSqrtFunction() throws {
