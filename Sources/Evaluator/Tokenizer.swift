@@ -116,10 +116,13 @@ struct Tokenizer {
         while index < input.endIndex {
             let currentChar = input[index]
 
-            // Ensure '.' is not at the beginning or end
+            // The first character is already checked above, so a '.' can only be misplaced at the
+            // end of the name: it must be followed by another name character ("#a.b", not "#a." or
+            // "#a..b").
             if currentChar == "." {
-                if index == startIndex || input.index(after: index) == input.endIndex {
-                    throw ExpressionError.parseError("Invalid variable name: '.' cannot be at the beginning or end")
+                let next = input.index(after: index)
+                guard next < input.endIndex, input[next].isAlphanumeric || input[next] == "_" else {
+                    throw ExpressionError.parseError("Invalid variable name: '.' cannot be at the end")
                 }
             }
 

@@ -604,4 +604,12 @@ class ExpressionEvaluatorTests: XCTestCase {
         XCTAssertThrowsError(try ExpressionEvaluator.evaluate(expression: "1 + 2)") as Double)
         XCTAssertThrowsError(try ExpressionEvaluator.evaluate(expression: "true false") as Bool)
     }
+
+    func testMisplacedDotInVariableName() throws {
+        let variables: (String) throws -> Any = { _ in 1 }
+        XCTAssertThrowsError(try ExpressionEvaluator.evaluate(expression: "#a.", variables: variables) as Double)
+        XCTAssertThrowsError(try ExpressionEvaluator.evaluate(expression: "#a. > 0", variables: variables) as Bool)
+        XCTAssertThrowsError(try ExpressionEvaluator.evaluate(expression: "#a..b", variables: variables) as Double)
+        XCTAssertThrowsError(try ExpressionEvaluator.evaluate(expression: "#.a", variables: variables) as Double)
+    }
 }
