@@ -624,4 +624,18 @@ class ExpressionEvaluatorTests: XCTestCase {
         XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "all_passed()", functions: functions), true)
         XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "_private() + 1", functions: functions), 4)
     }
+
+    func testIdentifierStartingWithBooleanKeyword() throws {
+        let functions: (String, [Any]) throws -> Any = { name, _ in
+            switch name {
+            case "truncate": return 1
+            case "falsy": return 2
+            default: throw ExpressionError.functionNotFound(name)
+            }
+        }
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "truncate() + falsy()", functions: functions), 3)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "true&&!false"), true)
+        XCTAssertEqual(try ExpressionEvaluator.evaluate(expression: "(true)"), true)
+        XCTAssertThrowsError(try ExpressionEvaluator.evaluate(expression: "trueish") as Bool)
+    }
 }

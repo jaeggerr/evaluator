@@ -55,10 +55,6 @@ struct Tokenizer {
             switch c {
             case " ", "\t", "\n":
                 advance()
-            case _ where input.hasPrefix("true", startingAt: index):
-                try tokens.append(.boolean(parseBoolean()))
-            case _ where input.hasPrefix("false", startingAt: index):
-                try tokens.append(.boolean(parseBoolean()))
             case "#", "$":
                 try tokens.append(parseVariable())
             case "'":
@@ -90,7 +86,13 @@ struct Tokenizer {
                 if let op = try parseOperator() {
                     tokens.append(.operator(op))
                 } else if c.isLetter || c == "_" {
-                    tokens.append(.identifier(parseIdentifier()))
+                    // Read the whole word before deciding: only an exact "true"/"false" is a
+                    // boolean, so a function such as truncate() stays one identifier.
+                    switch parseIdentifier() {
+                    case "true": tokens.append(.boolean(true))
+                    case "false": tokens.append(.boolean(false))
+                    case let name: tokens.append(.identifier(name))
+                    }
                 } else {
                     throw ExpressionError.parseError("Unexpected character: \(c)")
                 }
@@ -169,17 +171,6 @@ struct Tokenizer {
             throw ExpressionError.parseError("Invalid number: \(str)")
         }
         return num
-    }
-
-    private mutating func parseBoolean() throws -> Bool {
-        if input.hasPrefix("true", startingAt: index) {
-            advance(by: 4)
-            return true
-        } else if input.hasPrefix("false", startingAt: index) {
-            advance(by: 5)
-            return false
-        }
-        throw ExpressionError.parseError("Invalid boolean literal")
     }
 
     private mutating func parseOperator() throws -> Operator? {
